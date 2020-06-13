@@ -142,12 +142,11 @@ class MRJobRunner(object):
         if unrecognized_opts:
             log.warn('got unexpected opts from mrjob.conf: ' +
                      ', '.join(sorted(unrecognized_opts)))
-            mrjob_conf_opts = dict((key, mrjob_conf_opts[key])
-                                   for key in allowed_opts
-                                   if key in mrjob_conf_opts)
+            mrjob_conf_opts = {key: mrjob_conf_opts[key] for key in allowed_opts
+                                           if key in mrjob_conf_opts}
 
         # make sure all opts are at least set to None
-        blank_opts = dict((key, None) for key in allowed_opts)
+        blank_opts = {key: None for key in allowed_opts}
 
         # combine all of these options
         # only __init__() methods should modify self._opts!
@@ -165,7 +164,7 @@ class MRJobRunner(object):
         self._files = []
 
         # validate cleanup
-        if not self._opts['cleanup'] in CLEANUP_CHOICES:
+        if self._opts['cleanup'] not in CLEANUP_CHOICES:
             raise ValueError(
                 'cleanup must be one of %s, not %r' %
                 (', '.join(CLEANUP_CHOICES), self._opts['cleanup']))
@@ -224,7 +223,7 @@ class MRJobRunner(object):
 
         # store output_dir
         self._output_dir = output_dir
-        
+
         # give this job a unique name
         self._job_name = self._make_unique_job_name(
             self._opts['job_name_prefix'])
@@ -295,9 +294,8 @@ class MRJobRunner(object):
         using the read() method of the appropriate HadoopStreamingProtocol
         class."""
         assert self._ran_job
-        
-        for line in self._stream_output():
-            yield line
+
+        yield from self._stream_output()
 
     def _cleanup_scratch(self):
         """Cleanup any files/directories we create while running this job.

@@ -39,10 +39,10 @@ class TestExtraKwargs(TestCase):
     @setup
     def make_mrjob_conf(self):
         _, self.mrjob_conf_path = tempfile.mkstemp(prefix='mrjob.conf.')
-        # include one fake kwarg, and one real one
-        conf = {'runners': {'local': {'qux': 'quux',
-                                      'setup_cmds': ['echo foo']}}}
         with open(self.mrjob_conf_path, 'w') as conf_file:
+            # include one fake kwarg, and one real one
+            conf = {'runners': {'local': {'qux': 'quux',
+                                          'setup_cmds': ['echo foo']}}}
             self.mrjob_conf = dump_mrjob_conf(conf, conf_file)
 
     @teardown

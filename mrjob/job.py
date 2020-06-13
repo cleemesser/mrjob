@@ -242,10 +242,15 @@ class MRJob(object):
         """
         # Use mapper(), mapper_final(), and reducer() only if they've been
         # re-defined
-        kwargs = dict((func_name, getattr(self, func_name))
-                      for func_name in ('mapper', 'mapper_final', 'reducer')
-                      if (getattr(self, func_name).im_func is not
-                          getattr(MRJob, func_name).im_func))
+        kwargs = {
+            func_name: getattr(self, func_name)
+            for func_name in ('mapper', 'mapper_final', 'reducer')
+            if (
+                getattr(self, func_name).im_func
+                is not getattr(MRJob, func_name).im_func
+            )
+        }
+
 
         return [self.mr(**kwargs)]
 
@@ -486,8 +491,7 @@ class MRJob(object):
         """
         paths = self.args or ['-']
         for path in paths:
-            for line in read_input(path, stdin=self.stdin):
-                yield line
+            yield from read_input(path, stdin=self.stdin)
 
     def _wrap_protocols(self, step_num, step_type):
         """Pick the protocol classes to use for reading and writing
@@ -752,16 +756,16 @@ class MRJob(object):
         :py:meth:`add_file_option` instead.
         """
         pass_opt = self.option_parser.add_option(*args, **kwargs)
-        
+
         # We only support a subset of option parser actions
         SUPPORTED_ACTIONS = (
             'store', 'append', 'store_const', 'store_true', 'store_false',)
-        if not pass_opt.action in SUPPORTED_ACTIONS:
+        if pass_opt.action not in SUPPORTED_ACTIONS:
             raise OptionError('Expecting only actions %s, got %r' % (SUPPORTED_ACTIONS, pass_opt.action))
 
         # We only support a subset of option parser choices
         SUPPORTED_TYPES = ('int', 'long', 'float', 'string', 'choice', None)
-        if not pass_opt.type in SUPPORTED_TYPES:
+        if pass_opt.type not in SUPPORTED_TYPES:
             raise OptionError('Expecting only types %s, got %r' % (SUPPORTED_TYPES, pass_opt.type))
 
         self._passthrough_options.append(pass_opt)
@@ -786,10 +790,10 @@ class MRJob(object):
         """
         pass_opt = self.option_parser.add_option(*args, **kwargs)
 
-        if not pass_opt.type == 'string':
+        if pass_opt.type != 'string':
             raise OptionError('passthrough file options must take strings' % pass_opt.type)
 
-        if not pass_opt.action in ('store', 'append'):
+        if pass_opt.action not in ('store', 'append'):
             raise OptionError("passthrough file options must use the options 'store' or 'append'")
 
         self._file_options.append(pass_opt)
@@ -904,8 +908,8 @@ class MRJob(object):
         in the given options group (this works because the options and the
         keyword args we want to set have identical names).
         """
-        keys = set(opt.dest for opt in opt_group.option_list)
-        return dict((key, getattr(self.options, key)) for key in keys)
+        keys = {opt.dest for opt in opt_group.option_list}
+        return {key: getattr(self.options, key) for key in keys}
     
     def generate_passthrough_arguments(self):
         """Returns a list of arguments to pass to subprocesses, either on

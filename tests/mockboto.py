@@ -231,7 +231,7 @@ class MockEmrConnection(object):
         return jobflow_id
 
     def describe_jobflow(self, jobflow_id):
-        if not jobflow_id in self.mock_emr_job_flows:
+        if jobflow_id not in self.mock_emr_job_flows:
             raise boto.exception.S3ResponseError(404, 'Not Found')
 
         self.simulate_progress(jobflow_id)
@@ -239,7 +239,7 @@ class MockEmrConnection(object):
         return self.mock_emr_job_flows[jobflow_id]
 
     def add_jobflow_steps(self, jobflow_id, steps):
-        if not jobflow_id in self.mock_emr_job_flows:
+        if jobflow_id not in self.mock_emr_job_flows:
             raise boto.exception.S3ResponseError(404, 'Not Found')
 
         job_flow = self.mock_emr_job_flows[jobflow_id]
@@ -251,11 +251,11 @@ class MockEmrConnection(object):
                 actiononfailure=step.action_on_failure,
                 args=step.args(),
             )
-            
+
             job_flow.steps.append(step_object)
 
     def terminate_jobflow(self, jobflow_id):
-        if not jobflow_id in self.mock_emr_job_flows:
+        if jobflow_id not in self.mock_emr_job_flows:
             raise boto.exception.S3ResponseError(404, 'Not Found')
 
         job_flow = self.mock_emr_job_flows[jobflow_id]

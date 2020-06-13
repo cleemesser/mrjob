@@ -114,10 +114,10 @@ class HadoopJobRunner(MRJobRunner):
             self._opts['hadoop_streaming_jar'] = find_hadoop_streaming_jar(
                 self._opts['hadoop_home'])
 
-            if not self._opts['hadoop_streaming_jar']:
-                raise Exception(
-                    "Couldn't find streaming jar in %s, bailing out" %
-                    self._opts['hadoop_home'])
+        if not self._opts['hadoop_streaming_jar']:
+            raise Exception(
+                "Couldn't find streaming jar in %s, bailing out" %
+                self._opts['hadoop_home'])
 
         log.debug('Hadoop streaming jar is %s' %
                   self._opts['hadoop_streaming_jar'])
@@ -415,7 +415,7 @@ class HadoopJobRunner(MRJobRunner):
 
         ok_returncodes = ok_returncodes or [0]
 
-        if not stderr_is_ok and proc.returncode not in ok_returncodes:
+        if not (stderr_is_ok or proc.returncode in ok_returncodes):
             raise CalledProcessError(proc.returncode, args)
 
         if return_stdout:
@@ -436,9 +436,7 @@ class HadoopJobRunner(MRJobRunner):
 
         cat_proc = Popen(cat_args, stdout=PIPE, stderr=PIPE)
 
-        for line in cat_proc.stdout:
-            yield line
-
+        yield from cat_proc.stdout
         # there shouldn't be any stderr
         for line in cat_proc.stderr:
             log.error('STDERR: ' + line)
@@ -477,14 +475,13 @@ class HadoopJobRunner(MRJobRunner):
 
     def ls(self, path_glob):
         hdfs_match = HDFS_URI_RE.match(path_glob)
-        
+
         if not hdfs_match:
-            for path in super(HadoopJobRunner, self).ls(path_glob):
-                yield path
+            yield from super(HadoopJobRunner, self).ls(path_glob)
             return
 
         hdfs_prefix = hdfs_match.group(1)
-        
+
         stdout = self._invoke_hadoop(
             ['fs', '-lsr', path_glob],
             return_stdout=True,

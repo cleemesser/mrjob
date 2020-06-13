@@ -66,8 +66,10 @@ class FindMiscTestCase(TestCase):
             "2010-07-27 17:54:54,344 INFO org.apache.hadoop.fs.s3native.NativeS3FileSystem (main): Opening 's3://yourbucket/logs/2010/07/23/log2-00077.gz' for reading\n",
             "2010-07-27 17:54:54,344 INFO org.apache.hadoop.fs.s3native.NativeS3FileSystem (main): Opening 's3://yourbucket/logs/2010/07/23/log2-00078.gz' for reading\n",
         ]
-        assert_equal(find_input_uri_for_mapper(line for line in LOG_LINES),
-                     's3://yourbucket/logs/2010/07/23/log2-00077.gz')
+        assert_equal(
+            find_input_uri_for_mapper(iter(LOG_LINES)),
+            's3://yourbucket/logs/2010/07/23/log2-00077.gz',
+        )
 
     def test_find_hadoop_java_stack_trace(self):
         LOG_LINES = [
@@ -78,9 +80,13 @@ class FindMiscTestCase(TestCase):
             'BLARG\n',
             '        at org.apache.hadoop.mapred.IFile$Reader.next(IFile.java:332)\n',
         ]
-        assert_equal(find_hadoop_java_stack_trace(line for line in LOG_LINES),
-                     ['java.lang.OutOfMemoryError: Java heap space\n',
-                      '        at org.apache.hadoop.mapred.IFile$Reader.readNextBlock(IFile.java:270)\n'])
+        assert_equal(
+            find_hadoop_java_stack_trace(iter(LOG_LINES)),
+            [
+                'java.lang.OutOfMemoryError: Java heap space\n',
+                '        at org.apache.hadoop.mapred.IFile$Reader.readNextBlock(IFile.java:270)\n',
+            ],
+        )
 
     def test_find_interesting_hadoop_streaming_error(self):
         LOG_LINES = [
@@ -90,8 +96,9 @@ class FindMiscTestCase(TestCase):
         ]
 
         assert_equal(
-            find_interesting_hadoop_streaming_error(line for line in LOG_LINES),
-            'Error launching job , Output path already exists : Output directory s3://yourbucket/logs/2010/07/23/ already exists and is not empty')
+            find_interesting_hadoop_streaming_error(iter(LOG_LINES)),
+            'Error launching job , Output path already exists : Output directory s3://yourbucket/logs/2010/07/23/ already exists and is not empty',
+        )
 
 
 

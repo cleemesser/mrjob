@@ -164,11 +164,10 @@ class LocalMRJobRunner(MRJobRunner):
         if self._final_outfile:
             output_file = self._final_outfile
         else:
-            output_file = os.path.join(self._output_dir, 'part-00000') 
+            output_file = os.path.join(self._output_dir, 'part-00000')
         log.info('streaming final output from %s' % output_file)
 
-        for line in open(output_file):
-            yield line
+        yield from open(output_file)
 
     def _invoke_step(self, args, outfile_name, env=None):
         """Run the given command, outputting into outfile, and reading

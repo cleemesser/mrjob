@@ -85,18 +85,16 @@ def read_input(path, stdin=sys.stdin):
     """
     # handle '-' (special case)
     if path == '-':
-        for line in stdin:
-            yield line
+        yield from stdin
         return
-    
+
     # resolve globs
     paths = glob.glob(path)
     if not paths:
         raise IOError(2, 'No such file or directory: %r' % path)
     elif len(paths) > 1:
         for path in paths:
-            for line in read_input(path, stdin=stdin):
-                yield line
+            yield from read_input(path, stdin=stdin)
         return
     else:
         path = paths[0]
@@ -105,9 +103,8 @@ def read_input(path, stdin=sys.stdin):
     if os.path.isdir(path):
         for dirname, _, filenames in os.walk(path):
             for filename in filenames:
-                for line in read_input(os.path.join(dirname, filename),
-                                       stdin=stdin):
-                    yield line
+                yield from read_input(os.path.join(dirname, filename),
+                                       stdin=stdin)
         return
 
     # read from files
@@ -117,9 +114,8 @@ def read_input(path, stdin=sys.stdin):
         f = gzip.GzipFile(path)
     else:
         f = open(path)
-        
-    for line in f:
-        yield line
+
+    yield from f
 
 def tar_and_gzip(dir, out_path, filter=None):
     """Tar and gzip the given *dir* to a tarball at *out_path*.

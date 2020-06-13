@@ -137,9 +137,7 @@ class EmrConnection(AWSQueryConnection):
         """
         if type(steps) != types.ListType:
             steps = [steps]
-        params = {}
-        params['JobFlowId'] = jobflow_id
-
+        params = {'JobFlowId': jobflow_id}
         # Step args
         step_args = [self._build_step_args(step) for step in steps]
         params.update(self._build_step_list(step_args))
@@ -217,9 +215,7 @@ class EmrConnection(AWSQueryConnection):
         return response.jobflowid
 
     def _build_bootstrap_action_args(self, bootstrap_action):
-        bootstrap_action_params = {}
-        bootstrap_action_params['ScriptBootstrapAction.Path'] = bootstrap_action.path
-
+        bootstrap_action_params = {'ScriptBootstrapAction.Path': bootstrap_action.path}
         try:
             bootstrap_action_params['Name'] = bootstrap_action.name
         except AttributeError:
@@ -232,9 +228,10 @@ class EmrConnection(AWSQueryConnection):
         return bootstrap_action_params
 
     def _build_step_args(self, step):
-        step_params = {}
-        step_params['ActionOnFailure'] = step.action_on_failure
-        step_params['HadoopJarStep.Jar'] = step.jar()
+        step_params = {
+            'ActionOnFailure': step.action_on_failure,
+            'HadoopJarStep.Jar': step.jar(),
+        }
 
         main_class = step.main_class()
         if main_class:

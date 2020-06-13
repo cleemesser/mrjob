@@ -22,7 +22,7 @@ class MRVerboseJob(MRJob):
     def mapper_final(self):
         # the UNIX pipe buffer can hold 65536 bytes, so this should
         # definitely exceed that
-        for i in range(10000):
+        for _ in range(10000):
             self.increment_counter('Foo', 'Bar')
 
         for i in range(100):

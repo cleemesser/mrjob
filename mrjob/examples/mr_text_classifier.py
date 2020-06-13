@@ -64,9 +64,8 @@ def encode_document(text, cats=None, id=None):
     	work). If not specified, we'll auto-generate one.
     """
     text = unicode(text)
-    cats = dict((unicode(cat), bool(is_in_cat))
-                for cat, is_in_cat
-                in (cats or {}).iteritems())
+    cats = {unicode(cat): bool(is_in_cat) for cat, is_in_cat
+                    in (cats or {}).iteritems()}
 
     return JSONValueProtocol.write(
         None, {'text': text, 'cats': cats, 'id': id})
@@ -333,12 +332,14 @@ class MRTextClassifier(MRJob):
             return
 
         assert key_type == 'global'
-        ngram_to_info = dict(
-            ((n, ngram),
-             (dict((tuple(cat), df) for cat, df in cat_to_df),
-              dict((tuple(cat), tf) for cat, tf in cat_to_tf)))
-            for (n, ngram), (cat_to_df, cat_to_tf)
-            in values)
+        ngram_to_info = {
+            (n, ngram): (
+                {tuple(cat): df for cat, df in cat_to_df},
+                {tuple(cat): tf for cat, tf in cat_to_tf},
+            )
+            for (n, ngram), (cat_to_df, cat_to_tf) in values
+        }
+
 
         # m = # of possible ngrams of any given type. This is not a very
         # rigorous estimate, but it's good enough
@@ -361,7 +362,7 @@ class MRTextClassifier(MRJob):
                 # http://en.wikipedia.org/wiki/Rule_of_succession#Generalization_to_any_number_of_possibilities
                 cat_to_p[cat] = (tf + (2.0/m))/(t+2)
 
-            cats = set(cat for cat, in_cat in cat_to_t)
+            cats = {cat for cat, in_cat in cat_to_t}
             cat_to_score = {}
             for cat in cats:
                 p_if_in = cat_to_p.get((cat, True), 1.0/m)
@@ -477,7 +478,7 @@ class MRTextClassifier(MRJob):
         # store the document and scoring info
         doc = None
         ngrams_and_scores = []
-        
+
         for value_type, value in types_and_values:
             if value_type == 'doc':
                 doc = value
@@ -488,11 +489,10 @@ class MRTextClassifier(MRJob):
             ngrams_and_scores.append(((n, ngram), cat_to_score))
 
         # total scores for each ngram size
-        ngram_counts = dict(((n, ngram), count)
-                            for (n, ngram), count in doc['ngram_counts'])
-                            
+        ngram_counts = {(n, ngram): count for (n, ngram), count in doc['ngram_counts']}
+
         cat_to_n_to_total_score = defaultdict(lambda: defaultdict(float))
-        
+
         for (n, ngram), cat_to_score in ngrams_and_scores:
             tf = ngram_counts[(n, ngram)]
             for cat, score in cat_to_score.iteritems():

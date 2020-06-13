@@ -833,7 +833,7 @@ class EMRJobRunner(MRJobRunner):
                 log.debug('skipping non-output file: %s' %
                           s3_key_to_uri(s3_key))
                 continue
-            
+
             output_dir = os.path.join(self._get_local_tmp_dir(), 'output')
             log.debug('downloading %s -> %s' % (
                 s3_key_to_uri(s3_key), output_dir))
@@ -843,8 +843,7 @@ class EMRJobRunner(MRJobRunner):
             s3_key.get_contents_to_filename(
                 output_dir, headers={'Accept-Encoding': 'gzip'})
             log.debug('reading lines from %s' % output_dir)
-            for line in open(output_dir):
-                yield line
+            yield from open(output_dir)
 
     def _script_args(self):
         """How to invoke the script inside EMR"""
@@ -951,7 +950,7 @@ class EMRJobRunner(MRJobRunner):
 
             info = match.groupdict()
 
-            if not int(info['step_num']) in step_nums:
+            if int(info['step_num']) not in step_nums:
                 continue
 
             # sort so we can go through the steps in reverse order
@@ -987,13 +986,13 @@ class EMRJobRunner(MRJobRunner):
                     's3_log_file_uri': s3_log_file_uri,
                     'input_uri': None
                 }
-                
+
                 # if this is a mapper, figure out which input file we
                 # were reading from.
                 if info['node_type'] == 'm':
                     result['input_uri'] = self._scan_for_input_uri(
                         s3_log_file_uri, s3_conn)
-                
+
                 return result
 
         return None
@@ -1027,7 +1026,7 @@ class EMRJobRunner(MRJobRunner):
                 continue
 
             step_num = int(match.group(1))
-            if not step_num in step_nums:
+            if step_num not in step_nums:
                 continue
 
             log_path = self._download_log_file(s3_log_file_uri, s3_conn)
@@ -1080,10 +1079,9 @@ class EMRJobRunner(MRJobRunner):
         if self._master_bootstrap_script:
             return
 
-        if self._opts['bootstrap_mrjob']:
-            if self._mrjob_tar_gz_file is None:
-                self._mrjob_tar_gz_file = self._add_bootstrap_file(
-                    self._create_mrjob_tar_gz() + '#')
+        if self._opts['bootstrap_mrjob'] and self._mrjob_tar_gz_file is None:
+            self._mrjob_tar_gz_file = self._add_bootstrap_file(
+                self._create_mrjob_tar_gz() + '#')
 
         path = os.path.join(self._get_local_tmp_dir(), dest)
         log.info('writing master bootstrap script to %s' % path)
@@ -1452,8 +1450,7 @@ class EMRJobRunner(MRJobRunner):
 
         bucket_name, key_prefix = parse_s3_uri(uri)
         bucket = s3_conn.get_bucket(bucket_name)
-        for key in bucket.list(key_prefix):
-            yield key
+        yield from bucket.list(key_prefix)
 
     def get_s3_folder_keys(self, uri, s3_conn=None):
         """Background: S3 is even less of a filesystem than HDFS in that it

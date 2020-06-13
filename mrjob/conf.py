@@ -297,18 +297,14 @@ def combine_opts(combiners, *opts_list):
     :param opts_list: one or more dictionaries to combine
     """
     final_opts = {}
-    
+
     keys = set()
     for opts in opts_list:
         if opts:
             keys.update(opts)
 
     for key in keys:
-        values = []
-        for opts in opts_list:
-            if opts and key in opts:
-                values.append(opts[key])
-
+        values = [opts[key] for opts in opts_list if opts and key in opts]
         combine_func = combiners.get(key) or combine_values
         final_opts[key] = combine_func(*values)
 
